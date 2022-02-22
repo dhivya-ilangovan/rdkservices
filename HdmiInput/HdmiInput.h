@@ -64,6 +64,8 @@ namespace WPEFramework {
             uint32_t stopHdmiInput(const JsonObject& parameters, JsonObject& response);
 
             uint32_t setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response);
+            uint32_t getSupportedGameFeaturesWrapper(const JsonObject& parameters, JsonObject& response);
+            uint32_t getHdmiALLMStatusWrapper(const JsonObject& parameters, JsonObject& response);
             //End methods
 
             JsonArray getHDMIInputDevices();
@@ -88,6 +90,9 @@ namespace WPEFramework {
 
 	    void hdmiInputVideoModeUpdate( int port , dsVideoPortResolution_t resolution);
 	    static void dsHdmiVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+
+            void hdmiInputALLMChange( int port , bool allmMode);
+            static void dsHdmiALLMStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
         public:
             HdmiInput();
