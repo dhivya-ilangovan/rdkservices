@@ -49,7 +49,7 @@
 #define HDMIINPUT_EVENT_ON_SIGNAL_CHANGED "onSignalChanged"
 #define HDMIINPUT_EVENT_ON_STATUS_CHANGED "onInputStatusChanged"
 #define HDMIINPUT_EVENT_ON_VIDEO_MODE_UPDATED "videoStreamInfoUpdate"
-#define HDMIINPUT_EVENT_ON_ALLM_CHANGED "HdmiALLMStatusUpdate"
+#define HDMIINPUT_EVENT_ON_ALLM_CHANGED "hdmiALLMStatusUpdate"
 
 using namespace std;
 
