@@ -51,6 +51,7 @@
 #define HDMIINPUT_EVENT_ON_VIDEO_MODE_UPDATED "videoStreamInfoUpdate"
 #define HDMIINPUT_EVENT_ON_ALLM_CHANGED "HdmiALLMStatusUpdate"
 
+static bool allmModeStatus[3] = {false};
 using namespace std;
 
 namespace WPEFramework
