@@ -673,7 +673,7 @@ namespace WPEFramework
             }
 
             bool allm = getHdmiALLMStatus(portId);
-            LOGWARN("HdmiInput::getHdmiALLMStatusWrapper ALLM MODE:%d", &allm);
+            LOGWARN("HdmiInput::getHdmiALLMStatusWrapper ALLM MODE:%d", allm);
             response["ALLM_Mode"] = allm;
 
             returnResponse(true);
