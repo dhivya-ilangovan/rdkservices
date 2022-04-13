@@ -71,16 +71,16 @@ namespace WPEFramework {
             std::string getHDMISPD(int iPort);
             int setEdidVersion(int iPort, int iEdidVer);
             int getEdidVersion(int iPort);
-            bool setVideoRectangle(int x, int y, int width, int height);
+            bool setVideoRectangle(int x, int y, int width, int height, int type);
  
             void AVInputHotplug(int input , int connect, int type);
-            static void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
             void AVInputSignalChange( int port , int signalStatus, int type);
-            static void dsHdmiSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
             void AVInputStatusChange( int port , bool isPresented, int type);
-            static void dsHdmiStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
+            static void dsAVStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
     
             void hdmiInputVideoModeUpdate( int port , dsVideoPortResolution_t resolution);
             static void dsHdmiVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);

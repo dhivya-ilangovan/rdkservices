@@ -32,7 +32,7 @@
 #define COMPOSITE 1
 #define AV_HOT_PLUG_EVENT_CONNECTED 0
 #define AV_HOT_PLUG_EVENT_DISCONNECTED 1
-#define AVNPUT_METHOD_GET_HDMI_INPUT_DEVICES "getInputDevices"
+#define AVINPUT_METHOD_GET_HDMI_INPUT_DEVICES "getInputDevices"
 #define AVINPUT_METHOD_WRITE_EDID "writeEDID"
 #define AVINPUT_METHOD_READ_EDID "readEDID"
 #define AVINPUT_METHOD_READ_RAWHDMISPD "getRawHDMISPD"
@@ -53,9 +53,9 @@ using namespace std;
 int getTypeOfInput(string sType)
 {
     int iType = -1;
-    if (strcmp (sType, "HDMI") == 0)
+    if (strcmp (sType.c_str(), "HDMI") == 0)
         iType = HDMI;
-    else if (strcmp (sType, "COMPOSITE") ==0)
+    else if (strcmp (sType.c_str(), "COMPOSITE") ==0)
         iType = COMPOSITE;
     else
         throw "Invalide type of INPUT, please specify HDMI/COMPOSITE";
@@ -451,25 +451,22 @@ namespace WPEFramework
                 locator << "cvbsin://localhost/deviceid/" << port;
             }
             params["locator"] = locator.str();
-
+            /* values of dsHdmiInSignalStatus_t and dsCompInSignalStatus_t are same
+	       Hence used only HDMI macro for case statement */
             switch (signalStatus) {
                 case dsHDMI_IN_SIGNAL_STATUS_NOSIGNAL:
-                case dsCOMP_IN_SIGNAL_STATUS_NOSIGNAL:
                     params["signalStatus"] = "noSignal";
                     break;
 
                 case dsHDMI_IN_SIGNAL_STATUS_UNSTABLE:
-                case dsCOMP_IN_SIGNAL_STATUS_UNSTABLE:
                     params["signalStatus"] = "unstableSignal";
                     break;
 
                 case dsHDMI_IN_SIGNAL_STATUS_NOTSUPPORTED:
-                case dsCOMP_IN_SIGNAL_STATUS_NOTSUPPORTED:
                     params["signalStatus"] = "notSupportedSignal";
                     break;
 
                 case dsHDMI_IN_SIGNAL_STATUS_STABLE:
-                case dsCOMP_IN_SIGNAL_STATUS_STABLE:
                     params["signalStatus"] = "stableSignal";
                     break;
 
@@ -634,7 +631,7 @@ namespace WPEFramework
                 int compositein_hotplug_port = eventData->data.composite_in_connect.port;
                 int compositein_hotplug_conn = eventData->data.composite_in_connect.isPortConnected;
                 LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_HOTPLUG  event data:%d", compositein_hotplug_port);
-                CompositeInput::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? COMPOSITE_HOT_PLUG_EVENT_CONNECTED : COMPOSITE_HOT_PLUG_EVENT_DISCONNECTED, COMPOSITE);
+                AVInput::_instance->AVInputHotplug(compositein_hotplug_port, compositein_hotplug_conn ? AV_HOT_PLUG_EVENT_CONNECTED : AV_HOT_PLUG_EVENT_DISCONNECTED, COMPOSITE);
             }
         }
 
@@ -672,7 +669,7 @@ namespace WPEFramework
                 int composite_in_port = eventData->data.composite_in_status.port;
                 bool composite_in_status = eventData->data.composite_in_status.isPresented;
                 LOGWARN("Received IARM_BUS_DSMGR_EVENT_COMPOSITE_IN_STATUS  event  port: %d, started: %d", composite_in_port,composite_in_status);
-                CompositeInput::_instance->AVInputStatusChange(composite_in_port, composite_in_status, COMPOSITE);
+                AVInput::_instance->AVInputStatusChange(composite_in_port, composite_in_status, COMPOSITE);
             }
         }
 
