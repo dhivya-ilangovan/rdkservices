@@ -147,7 +147,8 @@ namespace WPEFramework
                 portId = stoi(sPortId);
                 iType = getTypeOfInput (sType);
             }catch (const device::Exception& err) {
-                LOG_DEVICE_EXCEPTION2(sPortId, sType);
+                LOGWARN("Invalid Arguments");
+                response["message"] = "Invalid Arguments";
                 returnResponse(false);
             }
 
@@ -178,7 +179,8 @@ namespace WPEFramework
             try {
                 iType = getTypeOfInput (sType);
             }catch (const device::Exception& err) {
-                LOG_DEVICE_EXCEPTION1(sType);
+                LOGWARN("Invalid Arguments");
+                response["message"] = "Invalid Arguments";
                 returnResponse(false);
             }
             
@@ -289,14 +291,19 @@ namespace WPEFramework
                 try {
                     iType = getTypeOfInput (sType);
                 }catch (const device::Exception& err) {
-                    LOG_DEVICE_EXCEPTION1(sType);
+                    LOGWARN("Invalid Arguments");
+                    response["message"] = "Invalid Arguments";
                     returnResponse(false);
                 }
                 response["devices"] = getInputDevices(iType);
             }
             else {
-                response["devices"] = getInputDevices(HDMI);
-                response["devices"] = getInputDevices(COMPOSITE);
+                JsonArray listHdmi = getInputDevices(HDMI);
+                JsonArray listComposite = getInputDevices(COMPOSITE);
+                for (int i = 0; i < listComposite.Length(); i++) {
+                    listHdmi.Add(listComposite.Get(i));
+            }		
+            response["devices"] = listHdmi;
             }
             returnResponse(true);
         }
