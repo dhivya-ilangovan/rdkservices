@@ -1,4 +1,4 @@
-
+#pragma once
 /**
 * @defgroup devicesettings
 * @{
@@ -24,7 +24,14 @@ static const int8_t HDMI_IN_PORT_NONE = -1;
 
 namespace device 
 {
+class HdmiInputImpl {
+public:
+    virtual ~HdmiInputImpl() = default;
 
+    virtual uint8_t getNumberOfInputs() const = 0;
+    virtual bool isPortConnected(int8_t Port) const = 0;
+    virtual std::string getCurrentVideoMode() const = 0;
+};
 
 /**
  * @class HdmiInput
@@ -54,6 +61,20 @@ public:
     void getEdidVersion (int iHdmiPort, int *iEdidVersion);
     void getHdmiALLMStatus (int iHdmiPort, bool *allmStatus);
     void getSupportedGameFeatures (std::vector<std::string> &featureList);
+    HdmiInputImpl* impl;
+
+    uint8_t getNumberOfInputs() const
+    {
+        return impl->getNumberOfInputs();
+    }
+    bool isPortConnected(int8_t Port) const
+    {
+        return impl->isPortConnected(Port);
+    }
+    std::string getCurrentVideoMode() const
+    {
+        return impl->getCurrentVideoMode();
+    }
 
 private:
     HdmiInput ();           /* default constructor */
