@@ -71,6 +71,7 @@
     LOGINFO("%s : Exit Time: %ldms\n", __FUNCTION__, getElapsedTimeMs(&start, &stop));
 	
 #undef returnIfParamNotFound
+
 #define returnIfParamNotFound(param, name) \
     if (!param.HasLabel(name)) \
     { \
