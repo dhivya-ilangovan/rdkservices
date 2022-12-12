@@ -71,11 +71,12 @@
     LOGINFO("%s : Exit Time: %ldms\n", __FUNCTION__, getElapsedTimeMs(&start, &stop));
 	
 #undef returnIfParamNotFound
+
 #define returnIfParamNotFound(param, name) \
     if (!param.HasLabel(name)) \
     { \
         LOGERR("No argument '%s'", name); \
-		PLUGIN_PROFILE_END()
+		PLUGIN_PROFILE_END(); \
         returnResponse(false); \
     }
 
