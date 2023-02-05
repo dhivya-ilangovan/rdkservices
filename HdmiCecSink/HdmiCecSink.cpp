@@ -398,7 +398,9 @@ namespace WPEFramework
 	   LOGINFO("Command: ReportPowerStatus Power Status from:%s status : %s \n",header.from.toString().c_str(),msg.status.toString().c_str());
            oldPowerStatus = HdmiCecSink::_instance->deviceList[header.from.toInt()].m_powerStatus.toInt();
 	   HdmiCecSink::_instance->addDevice(header.from.toInt());
-	   HdmiCecSink::_instance->deviceList[header.from.toInt()].update(msg.status);
+	   HdmiCecSink::_instance->deviceList[header.from.toInt()].update(OSDName(""));
+	   sleep(100);
+	   HdmiCecSink::_instance->deviceList[header.from.toInt()].update(OSDName("FA"));
 	   newPowerStatus = HdmiCecSink::_instance->deviceList[header.from.toInt()].m_powerStatus.toInt();
 	   LOGINFO(" oldPowerStatus %d newpower status %d \n",oldPowerStatus,newPowerStatus);
            if ((oldPowerStatus != newPowerStatus) )
