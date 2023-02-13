@@ -26,6 +26,7 @@
 #include "dsUtl.h"
 #include "dsError.h"
 #include "dsMgr.h"
+#include <math.h>
 
 #include <vector>
 #include <algorithm>
@@ -58,6 +59,42 @@
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 3
+
+#define PLUGIN_PROFILE_START() \
+    struct timespec start; \
+    struct timespec stop; \
+    clock_gettime(CLOCK_MONOTONIC, &start);\
+	LOGINFO("%s: Entry\n",__FUNCTION__);
+
+#define PLUGIN_PROFILE_END() \
+    clock_gettime(CLOCK_MONOTONIC, &stop); \
+    LOGINFO("%s : Exit Time: %ldms\n", __FUNCTION__, getElapsedTimeMs(&start, &stop));
+	
+#undef returnIfParamNotFound
+
+#define returnIfParamNotFound(param, name) \
+    if (!param.HasLabel(name)) \
+    { \
+        LOGERR("No argument '%s'", name); \
+		PLUGIN_PROFILE_END(); \
+        returnResponse(false); \
+    }
+
+long getElapsedTimeMs(struct timespec *start, struct timespec *stop)
+{
+    struct timespec elapsed = {};
+    if ((stop->tv_nsec - start->tv_nsec) < 0)
+    {
+        elapsed.tv_sec = stop->tv_sec - start->tv_sec - 1;
+        elapsed.tv_nsec = stop->tv_nsec - start->tv_nsec + 1000000000;
+    }
+    else
+    {
+        elapsed.tv_sec = stop->tv_sec - start->tv_sec;
+        elapsed.tv_nsec = stop->tv_nsec - start->tv_nsec;
+    }
+    return (elapsed.tv_sec*1000 + lround(elapsed.tv_nsec/1e6));
+}
 
 using namespace std;
 
@@ -165,6 +202,7 @@ namespace WPEFramework
 
         uint32_t HdmiInput::startHdmiInput(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
             returnIfParamNotFound(parameters, "portId");
 
@@ -174,6 +212,7 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
             bool success = true;
@@ -186,12 +225,14 @@ namespace WPEFramework
                 LOG_DEVICE_EXCEPTION1(sPortId);
                 success = false;
             }
+			PLUGIN_PROFILE_END();
             returnResponse(success);
 
         }
 
         uint32_t HdmiInput::stopHdmiInput(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
 
             bool success = true;
@@ -204,12 +245,14 @@ namespace WPEFramework
                 LOGWARN("HdmiInputService::stopHdmiInput Failed");
                 success = false;
             }
+			PLUGIN_PROFILE_END();
             returnResponse(success);
 
         }
 
         uint32_t HdmiInput::setVideoRectangleWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
 
             bool result = true;
@@ -253,6 +296,7 @@ namespace WPEFramework
 		}
                 catch (const std::exception& err) {
 		    LOGWARN("Invalid paramater X: %s,Y: %s, W: %s, H:%s ", parameters["x"].String().c_str(),parameters["y"].String().c_str(),parameters["w"].String().c_str(),parameters["h"].String().c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
                 }
 
@@ -263,12 +307,14 @@ namespace WPEFramework
                 }
             }
 
+			PLUGIN_PROFILE_END();
             returnResponse(result);
 
         }
 
         bool HdmiInput::setVideoRectangle(int x, int y, int width, int height)
         {
+			PLUGIN_PROFILE_START();
             bool ret = true;
 
             try
@@ -279,21 +325,25 @@ namespace WPEFramework
             {
                 ret = false;
             }
+			PLUGIN_PROFILE_END();
 
             return ret;
         }
 
         uint32_t HdmiInput::getHDMIInputDevicesWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
 
             response["devices"] = getHDMIInputDevices();
 
+			PLUGIN_PROFILE_END();
             returnResponse(true);
         }
 
         uint32_t HdmiInput::writeEDIDWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
 
             int deviceId;
@@ -307,17 +357,20 @@ namespace WPEFramework
             else
             {
                 LOGWARN("Required parameters are not passed");
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
 
 
             writeEDID(deviceId, message);
+			PLUGIN_PROFILE_END();
             returnResponse(true);
 
         }
 
         uint32_t HdmiInput::readEDIDWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
 
             string sPortId = parameters.HasLabel("deviceId") ? parameters["deviceId"].String() : "0";;
@@ -326,21 +379,25 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
             string edid = readEDID (portId);
             response["EDID"] = edid;
             if (edid.empty()) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
         }
 
         JsonArray HdmiInput::getHDMIInputDevices()
         {
+			PLUGIN_PROFILE_START();
             JsonArray list;
             try
             {
@@ -363,6 +420,7 @@ namespace WPEFramework
             catch (const std::exception& e)  {
                 LOGWARN("HdmiInputService::getHDMIInputDevices Failed");
             }
+			PLUGIN_PROFILE_END();
 
             return list;
         }
@@ -374,6 +432,7 @@ namespace WPEFramework
 
         std::string HdmiInput::readEDID(int iPort)
         {
+			PLUGIN_PROFILE_START();
             vector<uint8_t> edidVec({'u','n','k','n','o','w','n' });
             string edidbase64 = "";
             try
@@ -389,6 +448,7 @@ namespace WPEFramework
 
                 if(edidVec.size() > (size_t)numeric_limits<uint16_t>::max()) {
                     LOGERR("Size too large to use ToString base64 wpe api");
+					PLUGIN_PROFILE_END();
                     return edidbase64;
                 }
 
@@ -399,6 +459,7 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
             }
+			PLUGIN_PROFILE_END();
             return edidbase64;
         }
 
@@ -411,10 +472,12 @@ namespace WPEFramework
          */
         void HdmiInput::hdmiInputHotplug( int input , int connect)
         {
+			PLUGIN_PROFILE_START();
             LOGWARN("hdmiInputHotplug [%d, %d]", input, connect);
 
             JsonObject params;
             params["devices"] = getHDMIInputDevices();
+			PLUGIN_PROFILE_END();
             sendNotify(HDMIINPUT_EVENT_ON_DEVICES_CHANGED, params);
         }
 
@@ -427,6 +490,7 @@ namespace WPEFramework
          */
         void HdmiInput::hdmiInputSignalChange( int port , int signalStatus)
         {
+			PLUGIN_PROFILE_START();
             LOGWARN("hdmiInputSignalStatus [%d, %d]", port, signalStatus);
 
             JsonObject params;
@@ -456,6 +520,7 @@ namespace WPEFramework
                             params["signalStatus"] = "none";
                             break;
             }
+			PLUGIN_PROFILE_END();
 
             sendNotify(HDMIINPUT_EVENT_ON_SIGNAL_CHANGED, params);
         }
@@ -469,6 +534,7 @@ namespace WPEFramework
          */
         void HdmiInput::hdmiInputStatusChange( int port , bool isPresented)
         {
+			PLUGIN_PROFILE_START();
             LOGWARN("hdmiInputStatus [%d, %d]", port, isPresented);
 
             JsonObject params;
@@ -483,6 +549,7 @@ namespace WPEFramework
 	    else {
                 params["status"] = "stopped";
             }
+			PLUGIN_PROFILE_END();
 
             sendNotify(HDMIINPUT_EVENT_ON_STATUS_CHANGED, params);
         }
@@ -496,6 +563,7 @@ namespace WPEFramework
          */
         void HdmiInput::hdmiInputVideoModeUpdate( int port , dsVideoPortResolution_t resolution)
         {
+			PLUGIN_PROFILE_START();
             LOGWARN("hdmiInputVideoModeUpdate [%d]", port);
 
             JsonObject params;
@@ -590,13 +658,18 @@ namespace WPEFramework
                         break;
             }
 
+			PLUGIN_PROFILE_END();
             sendNotify(HDMIINPUT_EVENT_ON_VIDEO_MODE_UPDATED, params);
         }
 
         void HdmiInput::dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+			PLUGIN_PROFILE_START();
             if(!HdmiInput::_instance)
+			{
+				PLUGIN_PROFILE_END();
                 return;
+			}
 
             if (IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG == eventId)
             {
@@ -607,12 +680,17 @@ namespace WPEFramework
 
                 HdmiInput::_instance->hdmiInputHotplug(hdmiin_hotplug_port, hdmiin_hotplug_conn ? HDMI_HOT_PLUG_EVENT_CONNECTED : HDMI_HOT_PLUG_EVENT_DISCONNECTED);
             }
+			PLUGIN_PROFILE_END();
         }
 
         void HdmiInput::dsHdmiSignalStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+			PLUGIN_PROFILE_START();
             if(!HdmiInput::_instance)
+			{
+				PLUGIN_PROFILE_END();
                 return;
+			}
 
             if (IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS == eventId)
             {
@@ -624,12 +702,17 @@ namespace WPEFramework
                 HdmiInput::_instance->hdmiInputSignalChange(hdmi_in_port, hdmi_in_signal_status);
 
             }
+			PLUGIN_PROFILE_END();
         }
 
         void HdmiInput::dsHdmiStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+			PLUGIN_PROFILE_START();
             if(!HdmiInput::_instance)
+			{
+				PLUGIN_PROFILE_END();
                 return;
+			}
 
             if (IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS == eventId)
             {
@@ -641,12 +724,17 @@ namespace WPEFramework
                 HdmiInput::_instance->hdmiInputStatusChange(hdmi_in_port, hdmi_in_status);
 
             }
+			PLUGIN_PROFILE_END();
         }
 
         void HdmiInput::dsHdmiVideoModeEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+			PLUGIN_PROFILE_START();
             if(!HdmiInput::_instance)
+			{
+				PLUGIN_PROFILE_END();
                 return;
+			}
 
             if (IARM_BUS_DSMGR_EVENT_HDMI_IN_VIDEO_MODE_UPDATE == eventId)
             {
@@ -661,12 +749,17 @@ namespace WPEFramework
                 HdmiInput::_instance->hdmiInputVideoModeUpdate(hdmi_in_port, resolution);
 
             }
+			PLUGIN_PROFILE_END();
         }
 
         void HdmiInput::dsHdmiGameFeatureStatusEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
         {
+			PLUGIN_PROFILE_START();
             if(!HdmiInput::_instance)
+			{
+				PLUGIN_PROFILE_END();
                 return;
+			}
 
             if (IARM_BUS_DSMGR_EVENT_HDMI_IN_ALLM_STATUS == eventId)
             {
@@ -677,20 +770,24 @@ namespace WPEFramework
 
                 HdmiInput::_instance->hdmiInputALLMChange(hdmi_in_port, allm_mode);
             }
+			PLUGIN_PROFILE_END();
         }
 
         void HdmiInput::hdmiInputALLMChange( int port , bool allm_mode)
         {
+			PLUGIN_PROFILE_START();
             JsonObject params;
             params["id"] = port;
             params["gameFeature"] = "ALLM";
             params["mode"] = allm_mode;
 
+			PLUGIN_PROFILE_END();
             sendNotify(HDMIINPUT_EVENT_ON_GAME_FEATURE_STATUS_CHANGED, params);
         }
 
         uint32_t HdmiInput::getSupportedGameFeatures(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
             vector<string> supportedFeatures;
             try
@@ -707,16 +804,19 @@ namespace WPEFramework
             }
 
             if (supportedFeatures.empty()) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
                 setResponseArray(response, "supportedGameFeatures", supportedFeatures);
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
         }
 
         uint32_t HdmiInput::getHdmiGameFeatureStatusWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             string sPortId = parameters["portId"].String();
             string sGameFeature = parameters["gameFeature"].String();
             int portId = 0;
@@ -728,6 +828,7 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
@@ -741,13 +842,16 @@ namespace WPEFramework
 	    {
 		LOGWARN("HdmiInput::getHdmiGameFeatureStatusWrapper Mode is not supported. Supported mode: ALLM");
 		response["message"] = "Mode is not supported. Supported mode: ALLM";
+		PLUGIN_PROFILE_END();
 		returnResponse(false);
 	    }
+		PLUGIN_PROFILE_END();
             returnResponse(true);
         }
 
         bool HdmiInput::getHdmiALLMStatus(int iPort)
         {
+			PLUGIN_PROFILE_START();
             bool allm = false;
 
             try
@@ -759,11 +863,13 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
             }
+			PLUGIN_PROFILE_END();
             return allm;
         }
 
         uint32_t HdmiInput::getRawHDMISPDWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
            returnIfParamNotFound(parameters, "portId");
 
@@ -773,21 +879,25 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
             string spdInfo = getRawHDMISPD (portId);
             response["HDMISPD"] = spdInfo;
             if (spdInfo.empty()) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
         }
 
         uint32_t HdmiInput::getHDMISPDWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             LOGINFOMETHOD();
            returnIfParamNotFound(parameters, "portId");
 
@@ -797,21 +907,25 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
             string spdInfo = getHDMISPD (portId);
             response["HDMISPD"] = spdInfo;
             if (spdInfo.empty()) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
         }
 
         std::string HdmiInput::getRawHDMISPD(int iPort)
         {
+			PLUGIN_PROFILE_START();
                 LOGINFO("HdmiInput::getHDMISPDInfo");
                 vector<uint8_t> spdVect({'u','n','k','n','o','w','n' });
                 std::string spdbase64 = "";
@@ -829,6 +943,7 @@ namespace WPEFramework
 
                 if(spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                     LOGERR("Size too large to use ToString base64 wpe api");
+					PLUGIN_PROFILE_END();
                     return spdbase64;
                 }
 
@@ -843,11 +958,13 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
             }
+			PLUGIN_PROFILE_END();
             return spdbase64;
         }
 
         std::string HdmiInput::getHDMISPD(int iPort)
         {
+			PLUGIN_PROFILE_START();
                 LOGINFO("HdmiInput::getHDMISPDInfo");
                 vector<uint8_t> spdVect({'u','n','k','n','o','w','n' });
                 std::string spdbase64 = "";
@@ -865,6 +982,7 @@ namespace WPEFramework
 
                 if(spdVect.size() > (size_t)numeric_limits<uint16_t>::max()) {
                     LOGERR("Size too large to use ToString base64 wpe api");
+					PLUGIN_PROFILE_END();
                     return spdbase64;
                 }
 
@@ -886,11 +1004,13 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
             }
+			PLUGIN_PROFILE_END();
             return spdbase64;
         }
 
         uint32_t HdmiInput::setEdidVersionWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             int portId = 0;
 
             LOGINFOMETHOD();
@@ -902,6 +1022,7 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
                     LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+					PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
@@ -914,19 +1035,24 @@ namespace WPEFramework
             }
 
             if (edidVer < 0) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             bool result = setEdidVersion (portId, edidVer);
             if (result == false) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
+			PLUGIN_PROFILE_END();
         }
 
         int HdmiInput::setEdidVersion(int iPort, int iEdidVer)
         {
+			PLUGIN_PROFILE_START();
             bool ret = true;
             try
             {
@@ -938,11 +1064,13 @@ namespace WPEFramework
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
                 ret = false;
             }
+			PLUGIN_PROFILE_END();
             return ret;
         }
 
         uint32_t HdmiInput::getEdidVersionWrapper(const JsonObject& parameters, JsonObject& response)
         {
+			PLUGIN_PROFILE_START();
             string sPortId = parameters["portId"].String();
             int portId = 0;
 
@@ -952,6 +1080,7 @@ namespace WPEFramework
                 portId = stoi(sPortId);
             }catch (const std::exception& err) {
 		    LOGWARN("sPortId invalid paramater: %s ", sPortId.c_str());
+			PLUGIN_PROFILE_END();
 		    returnResponse(false);
             }
 
@@ -967,15 +1096,18 @@ namespace WPEFramework
             }
 
             if (edidVer < 0) {
+				PLUGIN_PROFILE_END();
                 returnResponse(false);
             }
             else {
+				PLUGIN_PROFILE_END();
                 returnResponse(true);
             }
         }
 
         int HdmiInput::getEdidVersion(int iPort)
         {
+			PLUGIN_PROFILE_START();
             int edidVersion = -1;
 
             try
@@ -987,6 +1119,7 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(std::to_string(iPort));
             }
+			PLUGIN_PROFILE_END();
             return edidVersion;
         }
 
